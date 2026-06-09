@@ -11,7 +11,7 @@ import {
 import axios from 'axios';
 
 import { AppStoreConnectConfig } from './types/index.js';
-import { AppStoreConnectClient } from './services/index.js';
+import { AppStoreConnectClient, resolveConfig } from './services/index.js';
 import { 
   AppHandlers, 
   BetaHandlers, 
@@ -22,13 +22,9 @@ import {
   LocalizationHandlers
 } from './handlers/index.js';
 
-// Load environment variables
-const config: AppStoreConnectConfig = {
-  keyId: process.env.APP_STORE_CONNECT_KEY_ID!,
-  issuerId: process.env.APP_STORE_CONNECT_ISSUER_ID!,
-  privateKeyPath: process.env.APP_STORE_CONNECT_P8_PATH!,
-  vendorNumber: process.env.APP_STORE_CONNECT_VENDOR_NUMBER, // Optional for sales/finance reports
-};
+// Resolve credentials from the macOS Keychain (preferred) or env vars.
+// See src/services/credentials.ts.
+const config: AppStoreConnectConfig = resolveConfig();
 
 class AppStoreConnectServer {
   private server: Server;

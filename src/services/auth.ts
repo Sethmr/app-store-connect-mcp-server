@@ -6,8 +6,10 @@ export class AuthService {
   constructor(private config: AppStoreConnectConfig) {}
 
   async generateToken(): Promise<string> {
-    const privateKey = await fs.readFile(this.config.privateKeyPath, 'utf-8');
-    
+    // Key material comes either inline (from the Keychain) or from a file path.
+    const privateKey = this.config.privateKey
+      ?? await fs.readFile(this.config.privateKeyPath as string, 'utf-8');
+
     const token = jwt.sign({}, privateKey, {
       algorithm: 'ES256',
       expiresIn: '20m', // App Store Connect tokens can be valid for up to 20 minutes
@@ -20,10 +22,12 @@ export class AuthService {
   }
 
   validateConfig(): void {
-    if (!this.config.keyId || !this.config.issuerId || !this.config.privateKeyPath) {
+    const hasKeyMaterial = !!this.config.privateKey || !!this.config.privateKeyPath;
+    if (!this.config.keyId || !this.config.issuerId || !hasKeyMaterial) {
       throw new Error(
-        "Missing required environment variables. Please set: " +
-        "APP_STORE_CONNECT_KEY_ID, APP_STORE_CONNECT_ISSUER_ID, APP_STORE_CONNECT_P8_PATH"
+        "Missing App Store Connect credentials. Store them in the macOS Keychain " +
+        "with scripts/setup-keychain.sh, or set APP_STORE_CONNECT_KEY_ID, " +
+        "APP_STORE_CONNECT_ISSUER_ID, and APP_STORE_CONNECT_P8_PATH."
       );
     }
   }

@@ -12,9 +12,23 @@ This fork is run **locally over stdio only**, never hosted. Security changes vs.
 4. **Remote-deployment surface deleted.** `Dockerfile`, `smithery.yaml`, the orphan `submit-app` scripts, the 4 MB OpenAPI dump, and stale committed `dist/` are gone. This is not meant to be deployed anywhere.
 5. **Dependency diet.** `sharp` (unused native binary) and `shx` removed; lockfile regenerated; `npm audit` clean at fork time.
 
-The `.p8` private key is read from a local path (`APP_STORE_CONNECT_P8_PATH`), the ES256 JWT is minted in-process, and the only network destination is Apple's API. Nothing else leaves the machine.
+The ES256 JWT is minted in-process and the only network destination is Apple's API. Nothing else leaves the machine.
 
-Run: `npm ci && npm run build`, then point your MCP client at `node dist/src/index.js` with `APP_STORE_CONNECT_KEY_ID`, `APP_STORE_CONNECT_ISSUER_ID`, `APP_STORE_CONNECT_P8_PATH` in the env (plus `ASC_ALLOW_WRITES=true` only when you mean it).
+### Credentials: macOS Keychain (default)
+
+Credentials resolve from the macOS login Keychain, so no secrets live in the MCP client config or any `.env`. Store them once:
+
+```sh
+scripts/setup-keychain.sh \
+  --key-id <KEY_ID> \
+  --issuer-id <ISSUER_ID> \
+  --p8 ~/.appstoreconnect/keys/AuthKey_<KEY_ID>.p8 \
+  [--vendor-number <VENDOR_NUMBER>]
+```
+
+This writes four generic-password items under service `appstore-connect-mcp` (`key-id`, `issuer-id`, `private-key`, optional `vendor-number`), each base64-encoded and granted to `/usr/bin/security` so reads are non-interactive. After running, the `.p8` file can be deleted and no env vars are needed. The server (`src/services/credentials.ts`) prefers env vars when present (CI / overrides) and otherwise reads the Keychain.
+
+Run: `npm ci && npm run build`, then point your MCP client at `node dist/src/index.js` (no env needed once the Keychain is populated; add `ASC_ALLOW_WRITES=true` only when you mean it).
 
 ---
 
