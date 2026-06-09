@@ -1,6 +1,22 @@
-# App Store Connect MCP Server
+# App Store Connect MCP Server (hardened local fork)
 
 A Model Context Protocol (MCP) server for interacting with the App Store Connect API. This server provides tools for managing apps, beta testers, bundle IDs, devices, app metadata, and capabilities in App Store Connect.
+
+## This fork (Sethmr): local-only, hardened 2026-06-09
+
+This fork is run **locally over stdio only**, never hosted. Security changes vs. the archived upstream (`JoshuaRileyDev/app-store-connect-mcp-server`):
+
+1. **Read-only by default.** All non-GET requests are blocked centrally in `AppStoreConnectClient.request` unless `ASC_ALLOW_WRITES=true` is set in the server environment. Tester removal, capability changes, version creation, and metadata updates cannot happen silently.
+2. **Token exfiltration closed.** `download_analytics_report_segment` took a model-supplied URL and attached the ASC Bearer token to it. Now: https required, non-Apple hosts rejected, and the token is only ever attached to `api.appstoreconnect.apple.com`.
+3. **Command injection removed.** The `list_schemes` tool shelled out to `xcodebuild` with string-interpolated paths. Tool and handler deleted.
+4. **Remote-deployment surface deleted.** `Dockerfile`, `smithery.yaml`, the orphan `submit-app` scripts, the 4 MB OpenAPI dump, and stale committed `dist/` are gone. This is not meant to be deployed anywhere.
+5. **Dependency diet.** `sharp` (unused native binary) and `shx` removed; lockfile regenerated; `npm audit` clean at fork time.
+
+The `.p8` private key is read from a local path (`APP_STORE_CONNECT_P8_PATH`), the ES256 JWT is minted in-process, and the only network destination is Apple's API. Nothing else leaves the machine.
+
+Run: `npm ci && npm run build`, then point your MCP client at `node dist/src/index.js` with `APP_STORE_CONNECT_KEY_ID`, `APP_STORE_CONNECT_ISSUER_ID`, `APP_STORE_CONNECT_P8_PATH` in the env (plus `ASC_ALLOW_WRITES=true` only when you mean it).
+
+---
 
 [![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/install-mcp?name=app-store-connect&config=JTdCJTIyY29tbWFuZCUyMiUzQSUyMm5weCUyMC15JTIwYXBwc3RvcmUtY29ubmVjdC1tY3Atc2VydmVyJTIyJTdE)
 

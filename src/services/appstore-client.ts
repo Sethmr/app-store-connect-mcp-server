@@ -16,8 +16,19 @@ export class AppStoreConnectClient {
   }
 
   async request<T = any>(method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH', url: string, data?: any, params?: Record<string, any>): Promise<T> {
+    // Read-only by default. Mutating calls (tester removal, capability changes,
+    // version creation, ...) require an explicit opt-in via ASC_ALLOW_WRITES=true
+    // in the server's environment, so a confused or injected tool call can never
+    // change App Store Connect state silently.
+    if (method !== 'GET' && process.env.ASC_ALLOW_WRITES !== 'true') {
+      throw new Error(
+        `Blocked ${method} ${url}: this server is running in read-only mode. ` +
+        'Set ASC_ALLOW_WRITES=true in the MCP server environment to enable write operations.'
+      );
+    }
+
     const token = await this.authService.generateToken();
-    
+
     const response = await this.axiosInstance.request<T>({
       method,
       url,
@@ -53,13 +64,28 @@ export class AppStoreConnectClient {
   }
 
   async downloadFromUrl(url: string): Promise<any> {
-    const token = await this.authService.generateToken();
-    
-    const response = await axios.get(url, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
+    // The segment URL is model-supplied input. Never let it exfiltrate the API
+    // token: require https, and only attach the Authorization header when the
+    // host is Apple's API itself. (Analytics report segment URLs are presigned
+    // and don't need the token anyway.)
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'https:') {
+      throw new Error(`Blocked download from ${url}: only https URLs are allowed.`);
+    }
+    const isAppleApi = parsed.hostname === 'api.appstoreconnect.apple.com';
+    if (!isAppleApi && !parsed.hostname.endsWith('.apple.com')) {
+      throw new Error(
+        `Blocked download from host ${parsed.hostname}: not an Apple domain. ` +
+        'Use the segment URLs returned by list_analytics_report_segments.'
+      );
+    }
+
+    const headers: Record<string, string> = {};
+    if (isAppleApi) {
+      headers['Authorization'] = `Bearer ${await this.authService.generateToken()}`;
+    }
+
+    const response = await axios.get(url, { headers });
 
     return {
       data: response.data,
