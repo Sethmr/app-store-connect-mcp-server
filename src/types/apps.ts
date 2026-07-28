@@ -29,6 +29,8 @@ export type AppIncludeOptions =
   | "builds"
   | "endUserLicenseAgreement"
   | "gameCenterEnabledVersions"
+  | "inAppPurchasesV2"
+  /** @deprecated The v1 in-app purchase relationship, deprecated since App Store Connect API 2.0. Use "inAppPurchasesV2". */
   | "inAppPurchases"
   | "preOrder"
   | "prices"

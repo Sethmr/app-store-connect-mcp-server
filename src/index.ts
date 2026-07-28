@@ -94,11 +94,11 @@ class AppStoreConnectServer {
                   enum: [
                     "appClips", "appInfos", "appStoreVersions", "availableTerritories",
                     "betaAppReviewDetail", "betaGroups", "betaLicenseAgreement", "builds",
-                    "endUserLicenseAgreement", "gameCenterEnabledVersions", "inAppPurchases",
-                    "preOrder", "prices", "reviewSubmissions"
+                    "endUserLicenseAgreement", "gameCenterEnabledVersions", "inAppPurchasesV2",
+                    "inAppPurchases", "preOrder", "prices", "reviewSubmissions"
                   ]
                 },
-                description: "Optional relationships to include in the response"
+                description: "Optional relationships to include in the response (use inAppPurchasesV2; inAppPurchases is the v1 relationship, deprecated since App Store Connect API 2.0)"
               }
             },
             required: ["appId"]
@@ -349,9 +349,30 @@ class AppStoreConnectServer {
                     type: "string",
                     description: "Filter by version string (e.g., '1.0.0')"
                   },
+                  appVersionState: {
+                    type: "string",
+                    description: "Filter by app version state (replaces appStoreState as of App Store Connect API 3.3)",
+                    enum: [
+                      "ACCEPTED",
+                      "DEVELOPER_REJECTED",
+                      "IN_REVIEW",
+                      "INVALID_BINARY",
+                      "METADATA_REJECTED",
+                      "PENDING_APPLE_RELEASE",
+                      "PENDING_DEVELOPER_RELEASE",
+                      "PREPARE_FOR_SUBMISSION",
+                      "PROCESSING_FOR_DISTRIBUTION",
+                      "READY_FOR_DISTRIBUTION",
+                      "READY_FOR_REVIEW",
+                      "REJECTED",
+                      "REPLACED_WITH_NEW_VERSION",
+                      "WAITING_FOR_EXPORT_COMPLIANCE",
+                      "WAITING_FOR_REVIEW"
+                    ]
+                  },
                   appStoreState: {
                     type: "string",
-                    description: "Filter by app store state",
+                    description: "Deprecated since App Store Connect API 3.3: use appVersionState. Only applied when appVersionState is absent.",
                     enum: [
                       "DEVELOPER_REMOVED_FROM_SALE",
                       "DEVELOPER_REJECTED", 

@@ -19,6 +19,8 @@ export class LocalizationHandlers {
     filter?: {
       platform?: string;
       versionString?: string;
+      appVersionState?: string;
+      /** @deprecated Deprecated since App Store Connect API 3.3. Use appVersionState. */
       appStoreState?: string;
     };
   }): Promise<ListAppStoreVersionsResponse> {
@@ -27,8 +29,7 @@ export class LocalizationHandlers {
     validateRequired(args, ['appId']);
     
     const params: Record<string, any> = {
-      limit: sanitizeLimit(limit),
-      'filter[app]': appId
+      limit: sanitizeLimit(limit)
     };
     
     if (filter?.platform) {
@@ -39,12 +40,16 @@ export class LocalizationHandlers {
       params['filter[versionString]'] = filter.versionString;
     }
     
-    if (filter?.appStoreState) {
+    // appVersionState replaced appStoreState in App Store Connect API 3.3. Fall
+    // back to the deprecated key (and its own value set) if that's all we're given.
+    if (filter?.appVersionState) {
+      params['filter[appVersionState]'] = filter.appVersionState;
+    } else if (filter?.appStoreState) {
       params['filter[appStoreState]'] = filter.appStoreState;
     }
     
     return this.client.get<ListAppStoreVersionsResponse>(
-      '/appStoreVersions',
+      `/apps/${appId}/appStoreVersions`,
       params
     );
   }
@@ -58,12 +63,11 @@ export class LocalizationHandlers {
     validateRequired(args, ['appStoreVersionId']);
     
     const params: Record<string, any> = {
-      limit: sanitizeLimit(limit),
-      'filter[appStoreVersion]': appStoreVersionId
+      limit: sanitizeLimit(limit)
     };
     
     return this.client.get<ListAppStoreVersionLocalizationsResponse>(
-      '/appStoreVersionLocalizations',
+      `/appStoreVersions/${appStoreVersionId}/appStoreVersionLocalizations`,
       params
     );
   }

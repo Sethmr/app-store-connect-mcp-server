@@ -203,7 +203,7 @@ Get detailed information about a specific app.
 
 **Parameters:**
 - `appId` (required): The ID of the app
-- `include` (optional): Related resources to include (e.g., appClips, appInfos, appStoreVersions, betaGroups, builds)
+- `include` (optional): Related resources to include (e.g., appClips, appInfos, appStoreVersions, betaGroups, builds, inAppPurchasesV2). Use `inAppPurchasesV2`; `inAppPurchases` is the v1 relationship, deprecated since App Store Connect API 2.0.
 
 **Example:**
 ```
@@ -334,7 +334,8 @@ Get all app store versions for a specific app.
 - `filter` (optional): Filter options
   - `platform`: Filter by platform (IOS, MAC_OS, TV_OS)
   - `versionString`: Filter by version string (e.g., '1.0.0')
-  - `appStoreState`: Filter by state (e.g., READY_FOR_SALE, PREPARE_FOR_SUBMISSION)
+  - `appVersionState`: Filter by version state (e.g., READY_FOR_DISTRIBUTION, PREPARE_FOR_SUBMISSION)
+  - `appStoreState`: Deprecated since App Store Connect API 3.3 — use `appVersionState`. Only applied when `appVersionState` is absent.
 
 **Example:**
 ```

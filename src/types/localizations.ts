@@ -73,6 +73,8 @@ export interface AppStoreVersion {
   attributes: {
     platform: string;
     versionString?: string;
+    appVersionState?: string;
+    /** @deprecated Deprecated since App Store Connect API 3.3. Read appVersionState instead. */
     appStoreState?: string;
     copyright?: string;
     releaseType?: string;
