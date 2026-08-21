@@ -32,8 +32,6 @@ Run: `npm ci && npm run build`, then point your MCP client at `node dist/src/ind
 
 ---
 
-[![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/install-mcp?name=app-store-connect&config=JTdCJTIyY29tbWFuZCUyMiUzQSUyMm5weCUyMC15JTIwYXBwc3RvcmUtY29ubmVjdC1tY3Atc2VydmVyJTIyJTdE)
-
 ## Overview
 
 The App Store Connect MCP Server is a comprehensive tool that bridges the gap between AI and Apple's App Store Connect ecosystem. Built on the Model Context Protocol (MCP), this server enables developers to interact with their App Store Connect data directly through conversational AI, making app management, beta testing, and analytics more accessible than ever.
@@ -43,7 +41,6 @@ The App Store Connect MCP Server is a comprehensive tool that bridges the gap be
 - 📊 **Comprehensive Analytics**: Access detailed app performance, sales, and user engagement data
 - 👥 **Streamlined Beta Testing**: Efficiently manage beta groups and testers
 - 🌍 **Localization Management**: Update app descriptions, keywords, and metadata across all languages
-- 🔧 **Developer Tools Integration**: List Xcode project schemes and integrate with development workflows
 - 🔐 **Secure Authentication**: Uses official App Store Connect API with JWT authentication
 - 🚀 **Real-time Data**: Access up-to-date information directly from Apple's systems
 
@@ -58,9 +55,6 @@ The App Store Connect MCP Server is a comprehensive tool that bridges the gap be
 This server transforms complex App Store Connect operations into simple conversational commands, whether you're checking app analytics, managing beta testers, updating app descriptions, or exploring your development pipeline.
 
 <a href="https://glama.ai/mcp/servers/z4j2smln34"><img width="380" height="200" src="https://glama.ai/mcp/servers/z4j2smln34/badge" alt="app-store-connect-mcp-server MCP server" /></a>
-<a href="https://smithery.ai/server/appstore-connect-mcp-server" style="text-decoration: none;">
-  <img alt="Smithery Installations" src="https://smithery.ai/badge/appstore-connect-mcp-server" />
-</a>
 [![MseeP.ai Security Assessment Badge](https://mseep.net/pr/joshuarileydev-app-store-connect-mcp-server-badge.png)](https://mseep.ai/app/joshuarileydev-app-store-connect-mcp-server)
 
 ## Features
@@ -109,24 +103,15 @@ This server transforms complex App Store Connect operations into simple conversa
   - Download sales and trends reports (daily, weekly, monthly, yearly)
   - Download finance reports by region
 
-- **Xcode Development Tools**
-  - List available schemes in Xcode projects and workspaces
-  - Integrate with development workflows and CI/CD pipelines
-
 ## Installation
 
-### Using Smithery
-
-To install App Store Connect Server for Claude Desktop automatically:
+This fork is not published to npm and is not installable from Smithery — both of those paths fetch the **unhardened upstream** package, not this one. Clone and build it:
 
 ```bash
-npx @smithery/cli install appstore-connect-mcp-server --client claude
-```
-
-### Manual Installation
-
-```bash
-npm install @joshuarileydev/app-store-connect-mcp-server
+git clone git@github.com:Sethmr/app-store-connect-mcp-server.git
+cd app-store-connect-mcp-server
+npm ci && npm run build
+scripts/setup-keychain.sh --key-id <KEY_ID> --issuer-id <ISSUER_ID> --p8 <path-to-.p8>
 ```
 
 ## Configuration
@@ -147,38 +132,32 @@ Add the following to your Claude Desktop configuration file:
 {
   "mcpServers": {
     "app-store-connect": {
-      "command": "npx",
+      "command": "node",
       "args": [
-        "-y",
-        "appstore-connect-mcp-server"
-      ],
-      "env": {
-        "APP_STORE_CONNECT_KEY_ID": "YOUR_KEY_ID",
-        "APP_STORE_CONNECT_ISSUER_ID": "YOUR_ISSUER_ID",
-        "APP_STORE_CONNECT_P8_PATH": "/path/to/your/auth-key.p8",
-        "APP_STORE_CONNECT_VENDOR_NUMBER": "YOUR_VENDOR_NUMBER_OPTIONAL"
-      }
+        "/absolute/path/to/app-store-connect-mcp-server/dist/src/index.js"
+      ]
     }
   }
 }
 ```
 
+No `env` block — credentials resolve from the Keychain. Add `"env": { "ASC_ALLOW_WRITES": "true" }` only for a session that is meant to write.
+
 ## Authentication
 
-### Required Configuration
+Credentials come from the macOS login Keychain (see "Credentials: macOS Keychain" above). Run `scripts/setup-keychain.sh` once and the server resolves them itself.
+
+### Getting the key
 1. Generate an App Store Connect API Key from [App Store Connect](https://appstoreconnect.apple.com/access/integrations/api)
 2. Download the .p8 private key file
 3. Note your Key ID and Issuer ID
-4. Set the required environment variables in your configuration:
-   - `APP_STORE_CONNECT_KEY_ID`: Your API Key ID
-   - `APP_STORE_CONNECT_ISSUER_ID`: Your Issuer ID  
-   - `APP_STORE_CONNECT_P8_PATH`: Path to your .p8 private key file
+4. Feed all three to `scripts/setup-keychain.sh`, then delete the `.p8`
+
+### Env-var override (CI only)
+`src/services/credentials.ts` prefers env vars when they are set, so CI can pass `APP_STORE_CONNECT_KEY_ID`, `APP_STORE_CONNECT_ISSUER_ID` and `APP_STORE_CONNECT_P8_PATH` instead. Do not put these in a local MCP client config — the Keychain exists so that no secret lives in a config file.
 
 ### Optional Configuration for Sales & Finance Reports
-To enable sales and finance reporting tools, you'll also need:
-- `APP_STORE_CONNECT_VENDOR_NUMBER`: Your vendor number from App Store Connect
-
-**Note**: Sales and finance report tools (`download_sales_report`, `download_finance_report`) will only be available if the vendor number is configured. You can find your vendor number in App Store Connect under "Sales and Trends" or "Payments and Financial Reports".
+Sales and finance report tools (`download_sales_report`, `download_finance_report`) are only available when a vendor number is present (`--vendor-number` on the setup script, or `APP_STORE_CONNECT_VENDOR_NUMBER`). You can find your vendor number in App Store Connect under "Sales and Trends" or "Payments and Financial Reports".
 
 ## Complete Tool Reference
 
@@ -586,20 +565,6 @@ Download finance reports for a specific region.
 ```
 "Download finance report for January 2024 worldwide"
 "Get finance report for 2024-01 region Z1"
-```
-
-### 🔧 Xcode Development Tools
-
-#### `list_schemes`
-List all available schemes in an Xcode project or workspace.
-
-**Parameters:**
-- `projectPath` (required): Path to .xcodeproj or .xcworkspace file
-
-**Example:**
-```
-"List schemes in /Users/john/MyApp/MyApp.xcodeproj"
-"Show available schemes for MyApp.xcworkspace"
 ```
 
 ## Error Handling
