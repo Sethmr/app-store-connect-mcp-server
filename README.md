@@ -4,6 +4,8 @@ A Model Context Protocol (MCP) server for interacting with the App Store Connect
 
 ## This fork (Sethmr): local-only, hardened 2026-06-09
 
+**New here? Start with [GUIDE.md](GUIDE.md)**: setup in about 15 minutes, and how we use it day to day.
+
 This fork is run **locally over stdio only**, never hosted. Security changes vs. the archived upstream (`JoshuaRileyDev/app-store-connect-mcp-server`):
 
 1. **Read-only by default.** All non-GET requests are blocked centrally in `AppStoreConnectClient.request` unless `ASC_ALLOW_WRITES=true` is set in the server environment. Tester removal, capability changes, version creation, and metadata updates cannot happen silently.
@@ -108,7 +110,7 @@ This server transforms complex App Store Connect operations into simple conversa
 This fork is not published to npm and is not installable from Smithery — both of those paths fetch the **unhardened upstream** package, not this one. Clone and build it:
 
 ```bash
-git clone git@github.com:Sethmr/app-store-connect-mcp-server.git
+git clone https://github.com/Sethmr/app-store-connect-mcp-server.git
 cd app-store-connect-mcp-server
 npm ci && npm run build
 scripts/setup-keychain.sh --key-id <KEY_ID> --issuer-id <ISSUER_ID> --p8 <path-to-.p8>
@@ -579,18 +581,11 @@ The server implements proper error handling for:
 ## Development
 
 ```bash
-# Install dependencies
-npm install
-
-# Build the project
-npm run build
-
-# Run tests
-npm test
-
-# Run type checking
-npm run type-check
+npm ci          # install exact locked dependencies
+npm run build   # compile TypeScript to dist/ (also the type check)
 ```
+
+There is no test suite. Check a change with the stdio smoke test in [GUIDE.md](GUIDE.md#7-updating).
 
 ## License
 

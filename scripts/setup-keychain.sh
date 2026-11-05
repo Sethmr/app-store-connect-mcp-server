@@ -5,9 +5,9 @@
 #
 # Usage:
 #   scripts/setup-keychain.sh \
-#     --key-id 4HZ68VGRH3 \
+#     --key-id ABC123DEFG \
 #     --issuer-id 12345678-aaaa-bbbb-cccc-1234567890ab \
-#     --p8 ~/.appstoreconnect/keys/AuthKey_4HZ68VGRH3.p8 \
+#     --p8 ~/.appstoreconnect/keys/AuthKey_ABC123DEFG.p8 \
 #     [--vendor-number 0000000]
 #
 # Re-running updates the stored values (idempotent). After running you can
